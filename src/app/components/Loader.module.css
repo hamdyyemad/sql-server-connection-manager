@@ -1,0 +1,56 @@
+/* Star Loader Styles */
+.loader {
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star {
+  opacity: 0;
+  fill: #3B82F6;
+  animation: loader 2s infinite alternate;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+}
+
+.star2 {
+  height: 20px;
+  margin-left: -10px;
+  animation-delay: 0.25s;
+}
+
+.star3 {
+  height: 16px;
+  margin-left: -15px;
+  animation-delay: 0.5s;
+}
+
+@keyframes loader {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(50px) rotate(0deg);
+  }
+  10% {
+    opacity: 0;
+    transform: translateY(0) translateX(50px) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-20px) translateX(0) rotate(360deg);
+  }
+}
+
+/* Hover effects */
+.star:hover {
+  fill: #6366F1;
+  filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.8));
+}
+
+/* Size variants */
+.small {
+  transform: scale(0.75);
+}
+
+.large {
+  transform: scale(1.25);
+} 

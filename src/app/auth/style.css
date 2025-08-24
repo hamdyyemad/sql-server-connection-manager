@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #09090b; /* Dark background by default */
+  color: #f8fafc;
+}
+
+/* Custom CSS Variables for theming */
+:root {
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --input: #ffffff;
+  --ring: #3b82f6;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+}
+
+.dark {
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: #3b82f6;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+}
+
+/* Dark theme overrides */
+.dark input {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.dark input::placeholder {
+  color: #94a3b8;
+}
+
+.dark .border-gray-200 {
+  border-color: #475569;
+}
+
+.dark .bg-white {
+  background-color: #1e293b;
+}
+
+.dark .text-gray-600 {
+  color: #94a3b8;
+}
+
+.dark .text-gray-400 {
+  color: #64748b;
+}
+
+/* Brand colors */
+.bg-brand-500 {
+  background-color: #3b82f6;
+}
+
+.hover\:bg-brand-600:hover {
+  background-color: #2563eb;
+}
+
+.active\:bg-brand-700:active {
+  background-color: #1d4ed8;
+}
+
+.dark .bg-brand-400 {
+  background-color: #60a5fa;
+}
+
+.dark .hover\:bg-brand-300:hover {
+  background-color: #93c5fd;
+}
+
+.dark .active\:bg-brand-200:active {
+  background-color: #bfdbfe;
+}
+
+/* Navy colors for dark theme */
+.dark .text-navy-700 {
+  color: #f8fafc;
+}
+
+.dark .bg-navy-800 {
+  background-color: #1e293b;
+}
+
+/* Light primary for light theme */
+.bg-lightPrimary {
+  background-color: #f8fafc;
+}
+
+/* Linear gradient utility */
+.linear {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Focus ring utilities */
+.focus-visible\:ring-2:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.focus-visible\:ring-ring:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.focus-visible\:ring-offset-2:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
+}
+
+/* Ring offset background */
+.ring-offset-background {
+  --tw-ring-offset-color: var(--background);
+}
+
+/* Ring utilities */
+.ring-ring {
+  --tw-ring-color: var(--ring);
+}
+
+/* Disabled states */
+.disabled\:pointer-events-none:disabled {
+  pointer-events: none;
+}
+
+.disabled\:opacity-50:disabled {
+  opacity: 0.5;
+}
+
+/* Transition utilities */
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.transition-duration-\[0\.2s\] {
+  transition-duration: 0.2s;
+}
+
+/* Checkbox styles */
+.defaultCheckbox {
+  position: relative;
+}
+
+.defaultCheckbox:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.defaultCheckbox:checked::before {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* CSS escape for 2xl breakpoint */
+.\32xl\:w-\[44vw\] {
+  width: 44vw;
+}
+
+/* Additional utility classes */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(4px);
+}
