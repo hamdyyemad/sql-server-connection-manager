@@ -1,0 +1,128 @@
+{
+  "name": "qr-code-admin-mssql",
+  "version": "1.0.0",
+  "description": "A modern Next.js admin panel designed to solve multiple connection string flexibility with MS SQL Server using mssql in Node.js. Features comprehensive database management, secure 2FA authentication, and interactive script management.",
+  "keywords": [
+    "mssql",
+    "sql-server",
+    "database-management",
+    "connection-strings",
+    "nextjs",
+    "admin-panel",
+    "2fa",
+    "authentication",
+    "nodejs",
+    "typescript",
+    "turso",
+    "sqlite",
+    "database-connections",
+    "enterprise",
+    "devops"
+  ],
+  "author": {
+    "name": "Hamdy Emad",
+    "email": "hamdyyemad@aol.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hamdyyemad/qr-code-admin-mssql.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hamdyyemad/qr-code-admin-mssql/issues"
+  },
+  "homepage": "https://github.com/hamdyyemad/qr-code-admin-mssql#readme",
+  "main": "index.js",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "scripts": "node run-scripts.js",
+    "scripts:help": "node run-scripts.js help",
+    "scripts:list": "node run-scripts.js list",
+    "db:setup": "node scripts/setup-database-with-migration.js",
+    "db:migrate": "node scripts/run-migration.js",
+    "db:triggers": "node scripts/database/add-triggers.js"
+  },
+  "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@types/bcrypt": "^6.0.0",
+    "@types/qrcode": "^1.5.5",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.6.1",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.539.0",
+    "mssql": "^11.0.1",
+    "next": "15.4.2",
+    "qrcode": "^1.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-icons": "^5.5.0",
+    "recharts": "^2.15.4",
+    "speakeasy": "^2.0.0",
+    "tailwind-merge": "^3.3.1",
+    "uuid": "^9.0.1",
+    "zod": "^4.0.10",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mssql": "^9.1.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/speakeasy": "^2.0.10",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.2",
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.3.7",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "mssql": "^11.0.1"
+  },
+  "optionalDependencies": {
+    "@libsql/client": "^0.5.6"
+  },
+  "config": {
+    "unsafe-perm": false
+  },
+  "files": [
+    "src/",
+    "scripts/",
+    "database/",
+    "docs/",
+    "public/",
+    "*.js",
+    "*.json",
+    "*.md"
+  ],
+  "directories": {
+    "lib": "src/",
+    "scripts": "scripts/",
+    "docs": "docs/",
+    "database": "database/"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

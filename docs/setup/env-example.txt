@@ -1,0 +1,25 @@
+# Copy this file to .env.local and configure your settings
+
+# 2FA Configuration
+NEXT_PUBLIC_APP_NAME=YourApp
+NEXT_PUBLIC_APP_ISSUER=YourApp
+
+# User 2FA Secrets (in production, these should be encrypted)
+# Format: USERNAME_2FA_SECRET=SECRET
+# Example: ADMIN_2FA_SECRET=JBSWY3DPEHPK3PXP
+ADMIN_2FA_SECRET=JBSWY3DPEHPK3PXP
+TEST_USER_2FA_SECRET=JBSWY3DPEHPK3PXP
+
+# 2FA Enabled Users (comma-separated list)
+# Format: USERNAME1,USERNAME2,USERNAME3
+# Leave empty for new users who need to set up 2FA
+ENABLED_2FA_USERS=
+
+# 2FA Setup Date (optional - for tracking when 2FA was enabled)
+# Format: USERNAME_2FA_SETUP_DATE=YYYY-MM-DD
+ADMIN_2FA_SETUP_DATE=2024-01-01
+TEST_USER_2FA_SETUP_DATE=2024-01-01
+
+# Existing login credentials (keep your existing ones)
+NEXT_ADMIN_USERNAME=admin
+NEXT_ADMIN_PASSWORD_HASH=your_password_hash_here

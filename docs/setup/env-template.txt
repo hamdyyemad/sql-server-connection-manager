@@ -1,0 +1,23 @@
+# Turso Database Configuration
+TURSO_DATABASE_URL=your_turso_database_url_here
+TURSO_AUTH_TOKEN=your_turso_auth_token_here
+
+# Admin User Configuration (for first-time setup - will be stored in database)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+
+# Application Configuration
+NEXT_PUBLIC_APP_NAME=Admin Panel
+NEXT_PUBLIC_APP_ISSUER=Admin Panel
+
+# Debug Configuration
+DEBUG=true
+NEXT_PUBLIC_DEBUG=true
+
+# JWT Configuration (for future use)
+JWT_SECRET=your_jwt_secret_here
+
+# Session Configuration
+SESSION_EXPIRY_HOURS=24
+MAX_LOGIN_ATTEMPTS=5
+RATE_LIMIT_WINDOW_HOURS=1
