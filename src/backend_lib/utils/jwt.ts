@@ -1,6 +1,7 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import { tr } from "zod/v4/locales";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
 
 export interface JWTPayload {
   userId: string;
@@ -19,9 +20,9 @@ export class JWTUtils {
   /**
    * Generate a JWT token with user authentication data
    */
-  static generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
+  static generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string {
     return jwt.sign(payload, JWT_SECRET, {
-      expiresIn: '24h', // 24 hours
+      expiresIn: "24h", // 24 hours
     });
   }
 
@@ -33,7 +34,7 @@ export class JWTUtils {
       const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
       return decoded;
     } catch (error) {
-      console.error('[JWTUtils] Token verification failed:', error);
+      console.error("[JWTUtils] Token verification failed:", error);
       return null;
     }
   }
@@ -46,7 +47,7 @@ export class JWTUtils {
       const decoded = jwt.decode(token) as JWTPayload;
       return decoded;
     } catch (error) {
-      console.error('[JWTUtils] Token decode failed:', error);
+      console.error("[JWTUtils] Token decode failed:", error);
       return null;
     }
   }
@@ -58,11 +59,11 @@ export class JWTUtils {
     try {
       const decoded = jwt.decode(token) as JWTPayload;
       if (!decoded || !decoded.exp) return true;
-      
+
       const currentTime = Math.floor(Date.now() / 1000);
       return decoded.exp < currentTime;
     } catch (error) {
-      console.error('[JWTUtils] Token expiration check failed:', error);
+      console.error("[JWTUtils] Token expiration check failed:", error);
       return true;
     }
   }
@@ -77,11 +78,12 @@ export class JWTUtils {
     is2FAEnabled: boolean;
     secret2FAHasValue: boolean;
     tempSecret2FAHasValue: boolean;
+    needsVerification: boolean;
   } {
     // For Edge Runtime, we'll decode without verification for now
     // This is a temporary solution - in production, you'd want proper verification
     const decoded = this.decodeToken(token);
-    
+
     if (!decoded) {
       return {
         isAuthenticated: false,
@@ -90,6 +92,7 @@ export class JWTUtils {
         is2FAEnabled: true,
         secret2FAHasValue: false,
         tempSecret2FAHasValue: false,
+        needsVerification: true,
       };
     }
 
@@ -102,6 +105,7 @@ export class JWTUtils {
         is2FAEnabled: true,
         secret2FAHasValue: false,
         tempSecret2FAHasValue: false,
+        needsVerification: true,
       };
     }
 
@@ -112,6 +116,7 @@ export class JWTUtils {
       is2FAEnabled: decoded.is2FAEnabled !== false, // Default to true if not specified
       secret2FAHasValue: decoded.secret2FAHasValue || false,
       tempSecret2FAHasValue: decoded.tempSecret2FAHasValue || false,
+      needsVerification: decoded.needsVerification || false,
     };
   }
 }

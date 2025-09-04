@@ -1,12 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-import { HelpText, CloudflareInfo, CloudflareForm } from "./cloudflare-form";
+import { HelpText, CloudflareInfo } from "./cloudflare-form";
 
-export default function CloudflareFormCard({
-  setIsConnected,
-}: {
-  setIsConnected: (isConnected: boolean) => void;
-}) {
+export default function CloudflareFormCard({children}: {children: React.ReactNode}) {
   return (
     <div className="lg:col-span-3 mt-3.5">
       <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-slate-500/10 border-slate-200/20 bg-slate-950/50 backdrop-blur-sm">
@@ -15,7 +11,7 @@ export default function CloudflareFormCard({
           {/* Cloudflare Icon */}
           <CloudflareInfo />
           <div className="text-center space-y-6">
-            <CloudflareForm setIsConnected={setIsConnected} />
+            {children}
           </div>
           {/* Help Text */}
           <HelpText />

@@ -27,7 +27,7 @@ export async function loginAction(
   formData: FormData
 ): Promise<LoginFormState> {
   let redirectPath: string | null = null;
-  
+
   try {
     // Validate form data with Zod
     const validation = validateWithZod(AuthSchemas.login, {
@@ -84,8 +84,6 @@ export async function loginAction(
       };
     }
 
-
-    
     // First, we need to set a temporary token so the API can authenticate
     const tempJwtPayload = {
       userId: user.userId,
@@ -97,20 +95,24 @@ export async function loginAction(
       secret2FAHasValue: false, // Temporary value
       tempSecret2FAHasValue: false, // Temporary value
     };
-    
+
     const { JWTUtils } = await import("@/backend_lib/utils/jwt");
     const tempJwtToken = JWTUtils.generateToken(tempJwtPayload);
-    
+
     // Set temporary token for API call
     await CookieUtils.setForAction(cookies(), "auth-token", tempJwtToken);
-    
+
     // Now call the API to get actual user status
     const statusResult = await serverAuthApi.check2FAStatus(user.userId);
-    
-    console.log("**********************API STATUS RESULT************************")
-    console.log(statusResult)
-    console.log("**********************API STATUS RESULT************************")
-    
+
+    console.log(
+      "**********************API STATUS RESULT************************"
+    );
+    console.log(statusResult);
+    console.log(
+      "**********************API STATUS RESULT************************"
+    );
+
     if (statusResult.success && statusResult.data) {
       // Type assertion to access the actual data structure returned by the API
       const statusData = statusResult.data as unknown as {
@@ -119,8 +121,9 @@ export async function loginAction(
         is2FAVerified: boolean;
         secret2FAHasValue: boolean;
         tempSecret2FAHasValue: boolean;
+        needsVerification: boolean;
       };
-      
+
       // Generate JWT token with actual user status from API
       const jwtPayload = {
         userId: user.userId,
@@ -128,34 +131,28 @@ export async function loginAction(
         is2FAEnabled: statusData.is2FAEnabled || false,
         hasSetup2FA: statusData.hasSetup2FA || false,
         is2FAVerified: statusData.is2FAVerified || false,
-        needsVerification: nextStep === "verify-2fa",
+        needsVerification: statusData.needsVerification || false,
         secret2FAHasValue: statusData.secret2FAHasValue || false,
         tempSecret2FAHasValue: statusData.tempSecret2FAHasValue || false,
       };
-      
-      console.log("**********************JWT PAYLOAD************************")
-      console.log(jwtPayload)
-      console.log("**********************JWT PAYLOAD************************")
-      
+
+      console.log("**********************JWT PAYLOAD************************");
+      console.log(jwtPayload);
+      console.log("**********************JWT PAYLOAD************************");
+
       const jwtToken = JWTUtils.generateToken(jwtPayload);
-      
+
       // Set JWT token as auth-token cookie
-      await CookieUtils.setForAction(
-        cookies(),
-        "auth-token",
-        jwtToken
-      );
-      
+      await CookieUtils.setForAction(cookies(), "auth-token", jwtToken);
+
       // Set username cookie
-      await CookieUtils.setForAction(
-        cookies(),
-        "auth-username",
-        user.username
-      );
+      await CookieUtils.setForAction(cookies(), "auth-username", user.username);
     } else {
       // Fallback if API call fails
-      console.log("**********************API CALL FAILED, USING FALLBACK************************")
-      
+      console.log(
+        "**********************API CALL FAILED, USING FALLBACK************************"
+      );
+
       const jwtPayload = {
         userId: user.userId,
         username: user.username,
@@ -166,22 +163,14 @@ export async function loginAction(
         secret2FAHasValue: false,
         tempSecret2FAHasValue: false,
       };
-      
+
       const jwtToken = JWTUtils.generateToken(jwtPayload);
-      
+
       // Set JWT token as auth-token cookie
-      await CookieUtils.setForAction(
-        cookies(),
-        "auth-token",
-        jwtToken
-      );
-      
+      await CookieUtils.setForAction(cookies(), "auth-token", jwtToken);
+
       // Set username cookie
-      await CookieUtils.setForAction(
-        cookies(),
-        "auth-username",
-        user.username
-      );
+      await CookieUtils.setForAction(cookies(), "auth-username", user.username);
     }
 
     // Determine redirect path based on nextStep

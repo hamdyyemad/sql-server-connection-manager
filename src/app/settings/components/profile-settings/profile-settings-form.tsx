@@ -62,11 +62,11 @@ function ProfileSettingsForm() {
   const handleSave = useCallback(() => {
     // Collect data from all refs
     const profileData: ProfileData = {
-      username: usernameRef.current?.getValue() ?? "admin",
-      email: emailRef.current?.getValue() ?? "admin@example.com",
-      firstName: firstNameRef.current?.getValue() ?? "Admin",
-      lastName: lastNameRef.current?.getValue() ?? "User",
-      bio: bioRef.current?.getValue() ?? "System Administrator",
+      username: usernameRef.current?.getValue() ?? "",
+      email: emailRef.current?.getValue() ?? "",
+      firstName: firstNameRef.current?.getValue() ?? "",
+      lastName: lastNameRef.current?.getValue() ?? "",
+      bio: bioRef.current?.getValue() ?? "",
     };
 
     // Handle profile save logic

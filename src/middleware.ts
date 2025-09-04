@@ -8,14 +8,12 @@ import "./backend_lib/utils/debug-init";
 const loginPath = "/auth/login";
 
 // Define auth pages
-const AUTH_PAGES = [
-  "/auth/login",
-  "/auth/2fa-setup", 
-  "/auth/2fa-verify"
-];
+const AUTH_PAGES = ["/auth/login", "/auth/2fa-setup", "/auth/2fa-verify"];
 
 // Type for middleware functions
-type MiddlewareFunction = (request: NextRequest) => Promise<NextResponse | null>;
+type MiddlewareFunction = (
+  request: NextRequest
+) => Promise<NextResponse | null>;
 
 // Main middleware function with chaining
 export async function middleware(request: NextRequest) {
@@ -36,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
 // Middleware chaining utility
 async function chainMiddlewares(
-  request: NextRequest, 
+  request: NextRequest,
   middlewares: MiddlewareFunction[]
 ): Promise<NextResponse> {
   for (const middleware of middlewares) {
@@ -49,7 +47,9 @@ async function chainMiddlewares(
 }
 
 // Middleware for auth pages (login, 2fa-setup, 2fa-verify)
-async function authPagesMiddleware(request: NextRequest): Promise<NextResponse | null> {
+async function authPagesMiddleware(
+  request: NextRequest
+): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
 
   // For GET requests, check authentication status and redirect if needed
@@ -66,105 +66,148 @@ async function authPagesMiddleware(request: NextRequest): Promise<NextResponse |
 
   try {
     // Check if token is a JWT token (starts with eyJ)
-    if (authToken.startsWith('eyJ')) {
+    if (authToken.startsWith("eyJ")) {
       // Get user flags from JWT token (Edge Runtime compatible)
       const userFlags = JWTUtils.getUserFlagsFromToken(authToken);
-      
+
       if (!userFlags.isAuthenticated) {
-        console.log(`[AuthMiddleware] Invalid or expired JWT token, redirecting to login`);
+        console.log(
+          `[AuthMiddleware] Invalid or expired JWT token, redirecting to /auth/login`
+        );
         if (pathname !== "/auth/login") {
           return NextResponse.redirect(new URL("/auth/login", request.url));
         }
         return null;
       }
 
-      console.log(`[AuthMiddleware] JWT - is2FAEnabled: ${userFlags.is2FAEnabled}, hasSetup2FA: ${userFlags.hasSetup2FA}, is2FAVerified: ${userFlags.is2FAVerified}, secret2FAHasValue: ${userFlags.secret2FAHasValue}, tempSecret2FAHasValue: ${userFlags.tempSecret2FAHasValue}`);
+      console.log(
+        `[AuthMiddleware] JWT - is2FAEnabled: ${userFlags.is2FAEnabled}, hasSetup2FA: ${userFlags.hasSetup2FA}, is2FAVerified: ${userFlags.is2FAVerified}, secret2FAHasValue: ${userFlags.secret2FAHasValue}, tempSecret2FAHasValue: ${userFlags.tempSecret2FAHasValue}, needsVerification: ${userFlags.needsVerification}`
+      );
 
       // Handle different auth pages
       switch (pathname) {
         case "/auth/login":
-          return handleLoginPageRedirect(request, { 
-            is2FAEnabled: userFlags.is2FAEnabled, 
-            hasSetup2FA: userFlags.hasSetup2FA, 
-            is2FAVerified: userFlags.is2FAVerified, 
-            needsVerification: false, // Will be determined by the redirect logic
-            secret2FAHasValue: userFlags.secret2FAHasValue, 
-            tempSecret2FAHasValue: userFlags.tempSecret2FAHasValue 
+          return handleLoginPageRedirect(request, {
+            is2FAEnabled: userFlags.is2FAEnabled,
+            hasSetup2FA: userFlags.hasSetup2FA,
+            is2FAVerified: userFlags.is2FAVerified,
+            needsVerification: userFlags.needsVerification, // Will be determined by the redirect logic
+            secret2FAHasValue: userFlags.secret2FAHasValue,
+            tempSecret2FAHasValue: userFlags.tempSecret2FAHasValue,
           });
-        
+
         case "/auth/2fa-setup":
-          return handle2FASetupPageRedirect(request, { 
-            is2FAEnabled: userFlags.is2FAEnabled, 
-            hasSetup2FA: userFlags.hasSetup2FA, 
-            is2FAVerified: userFlags.is2FAVerified, 
-            needsVerification: false, // Will be determined by the redirect logic
-            secret2FAHasValue: userFlags.secret2FAHasValue, 
-            tempSecret2FAHasValue: userFlags.tempSecret2FAHasValue 
+          return handle2FASetupPageRedirect(request, {
+            is2FAEnabled: userFlags.is2FAEnabled,
+            hasSetup2FA: userFlags.hasSetup2FA,
+            is2FAVerified: userFlags.is2FAVerified,
+            needsVerification: userFlags.needsVerification, // Will be determined by the redirect logic
+            secret2FAHasValue: userFlags.secret2FAHasValue,
+            tempSecret2FAHasValue: userFlags.tempSecret2FAHasValue,
           });
-        
+
         case "/auth/2fa-verify":
-          return handle2FAVerifyPageRedirect(request, { 
-            is2FAEnabled: userFlags.is2FAEnabled, 
-            hasSetup2FA: userFlags.hasSetup2FA, 
-            is2FAVerified: userFlags.is2FAVerified, 
-            needsVerification: false, // Will be determined by the redirect logic
-            secret2FAHasValue: userFlags.secret2FAHasValue, 
-            tempSecret2FAHasValue: userFlags.tempSecret2FAHasValue 
+          return handle2FAVerifyPageRedirect(request, {
+            is2FAEnabled: userFlags.is2FAEnabled,
+            hasSetup2FA: userFlags.hasSetup2FA,
+            is2FAVerified: userFlags.is2FAVerified,
+            needsVerification: userFlags.needsVerification, // Will be determined by the redirect logic
+            secret2FAHasValue: userFlags.secret2FAHasValue,
+            tempSecret2FAHasValue: userFlags.tempSecret2FAHasValue,
           });
-        
+
         default:
           return null;
       }
     } else {
       // Legacy token handling - fallback to database check for backward compatibility
-      console.log(`[AuthMiddleware] Legacy token detected, using database check`);
-      const { check2FAStatusAction } = await import("@/backend_lib/actions/2fa");
+      console.log(
+        `[AuthMiddleware] Legacy token detected, using database check`
+      );
+      const { check2FAStatusAction } = await import(
+        "@/backend_lib/actions/2fa"
+      );
       const result = await check2FAStatusAction();
 
       if (!result.success) {
-        console.log(`[AuthMiddleware] Invalid legacy auth token, staying on: ${pathname}`);
-        if(pathname !== "/auth/login") {
+        console.log(
+          `[AuthMiddleware] Invalid legacy auth token, staying on: ${pathname}`
+        );
+        if (pathname !== "/auth/login") {
           return NextResponse.redirect(new URL("/auth/login", request.url));
         }
         return null;
       }
 
-      const { 
-        is2FAEnabled = false, 
-        hasSetup2FA = false, 
-        is2FAVerified = false, 
+      const {
+        is2FAEnabled = false,
+        hasSetup2FA = false,
+        is2FAVerified = false,
         needsVerification = false,
         secret2FAHasValue = false,
-        tempSecret2FAHasValue = false
+        tempSecret2FAHasValue = false,
       } = result;
-      
-      console.log(`[AuthMiddleware] Legacy - is2FAEnabled: ${is2FAEnabled}, hasSetup2FA: ${hasSetup2FA}, is2FAVerified: ${is2FAVerified}, needsVerification: ${needsVerification}, secret2FAHasValue: ${secret2FAHasValue}, tempSecret2FAHasValue: ${tempSecret2FAHasValue}`);
+
+      console.log(
+        `[AuthMiddleware] Legacy - is2FAEnabled: ${is2FAEnabled}, hasSetup2FA: ${hasSetup2FA}, is2FAVerified: ${is2FAVerified}, needsVerification: ${needsVerification}, secret2FAHasValue: ${secret2FAHasValue}, tempSecret2FAHasValue: ${tempSecret2FAHasValue}`
+      );
 
       // Handle different auth pages
       switch (pathname) {
         case "/auth/login":
-          return handleLoginPageRedirect(request, { is2FAEnabled, hasSetup2FA, is2FAVerified, needsVerification, secret2FAHasValue, tempSecret2FAHasValue });
-        
+          return handleLoginPageRedirect(request, {
+            is2FAEnabled,
+            hasSetup2FA,
+            is2FAVerified,
+            needsVerification,
+            secret2FAHasValue,
+            tempSecret2FAHasValue,
+          });
+
         case "/auth/2fa-setup":
-          return handle2FASetupPageRedirect(request, { is2FAEnabled, hasSetup2FA, is2FAVerified, needsVerification, secret2FAHasValue, tempSecret2FAHasValue });
-        
+          return handle2FASetupPageRedirect(request, {
+            is2FAEnabled,
+            hasSetup2FA,
+            is2FAVerified,
+            needsVerification,
+            secret2FAHasValue,
+            tempSecret2FAHasValue,
+          });
+
         case "/auth/2fa-verify":
-          return handle2FAVerifyPageRedirect(request, { is2FAEnabled, hasSetup2FA, is2FAVerified, needsVerification, secret2FAHasValue, tempSecret2FAHasValue });
-        
+          return handle2FAVerifyPageRedirect(request, {
+            is2FAEnabled,
+            hasSetup2FA,
+            is2FAVerified,
+            needsVerification,
+            secret2FAHasValue,
+            tempSecret2FAHasValue,
+          });
+
         default:
           return null;
       }
     }
   } catch (error) {
-    console.error("[AuthMiddleware] Error checking authentication status:", error);
+    console.error(
+      "[AuthMiddleware] Error checking authentication status:",
+      error
+    );
     return null;
   }
 }
 
 // Handle login page redirects
 function handleLoginPageRedirect(
-  request: NextRequest, 
-  flags: { is2FAEnabled: boolean; hasSetup2FA: boolean; is2FAVerified: boolean; needsVerification: boolean; secret2FAHasValue: boolean; tempSecret2FAHasValue: boolean }
+  request: NextRequest,
+  flags: {
+    is2FAEnabled: boolean;
+    hasSetup2FA: boolean;
+    is2FAVerified: boolean;
+    needsVerification: boolean;
+    secret2FAHasValue: boolean;
+    tempSecret2FAHasValue: boolean;
+  }
 ): NextResponse | null {
   const { is2FAEnabled, hasSetup2FA, is2FAVerified, needsVerification } = flags;
 
@@ -175,20 +218,30 @@ function handleLoginPageRedirect(
   }
 
   // If 2FA is set up and verified, go to homepage
-  if (hasSetup2FA === true && is2FAVerified === true && needsVerification === false) {
-    console.log("[AuthMiddleware] 2FA is set up and verified, redirecting to homepage");
+  if (
+    hasSetup2FA === true &&
+    is2FAVerified === true &&
+    needsVerification === false
+  ) {
+    console.log(
+      "[AuthMiddleware] 2FA is set up and verified, redirecting to homepage"
+    );
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   // If 2FA is set up but not verified, go to 2FA setup
   if (hasSetup2FA === true && is2FAVerified === false) {
-    console.log("[AuthMiddleware] 2FA is set up but not verified, redirecting to 2FA setup");
+    console.log(
+      "[AuthMiddleware] 2FA is set up but not verified, redirecting to 2FA setup"
+    );
     return NextResponse.redirect(new URL("/auth/2fa-setup", request.url));
   }
 
   // If needs verification, go to 2FA verify
   if (needsVerification === true) {
-    console.log("[AuthMiddleware] Needs verification, redirecting to 2FA verify");
+    console.log(
+      "[AuthMiddleware] Needs verification, redirecting to 2FA verify"
+    );
     return NextResponse.redirect(new URL("/auth/2fa-verify", request.url));
   }
 
@@ -199,8 +252,15 @@ function handleLoginPageRedirect(
 
 // Handle 2FA setup page redirects
 function handle2FASetupPageRedirect(
-  request: NextRequest, 
-  flags: { is2FAEnabled: boolean; hasSetup2FA: boolean; is2FAVerified: boolean; needsVerification: boolean; secret2FAHasValue: boolean; tempSecret2FAHasValue: boolean }
+  request: NextRequest,
+  flags: {
+    is2FAEnabled: boolean;
+    hasSetup2FA: boolean;
+    is2FAVerified: boolean;
+    needsVerification: boolean;
+    secret2FAHasValue: boolean;
+    tempSecret2FAHasValue: boolean;
+  }
 ): NextResponse | null {
   const { is2FAEnabled, hasSetup2FA, is2FAVerified, needsVerification } = flags;
 
@@ -211,8 +271,14 @@ function handle2FASetupPageRedirect(
   }
 
   // If 2FA is set up and verified, go to homepage
-  if (hasSetup2FA === true && is2FAVerified === true && needsVerification === false) {
-    console.log("[AuthMiddleware] 2FA is set up and verified, redirecting to homepage");
+  if (
+    hasSetup2FA === true &&
+    is2FAVerified === true &&
+    needsVerification === false
+  ) {
+    console.log(
+      "[AuthMiddleware] 2FA is set up and verified, redirecting to homepage"
+    );
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -221,7 +287,9 @@ function handle2FASetupPageRedirect(
     // Check if there's a temporary 2FA secret in cookies
     const tempSecret = request.cookies.get("temp-2fa-secret")?.value;
     if (tempSecret) {
-      console.log("[AuthMiddleware] 2FA secret exists, redirecting to 2FA verify");
+      console.log(
+        "[AuthMiddleware] 2FA secret exists, redirecting to 2FA verify"
+      );
       return NextResponse.redirect(new URL("/auth/2fa-verify", request.url));
     } else {
       console.log("[AuthMiddleware] Staying on 2FA setup page");
@@ -235,10 +303,24 @@ function handle2FASetupPageRedirect(
 
 // Handle 2FA verify page redirects
 function handle2FAVerifyPageRedirect(
-  request: NextRequest, 
-  flags: { is2FAEnabled: boolean; hasSetup2FA: boolean; is2FAVerified: boolean; needsVerification: boolean; secret2FAHasValue: boolean; tempSecret2FAHasValue: boolean }
+  request: NextRequest,
+  flags: {
+    is2FAEnabled: boolean;
+    hasSetup2FA: boolean;
+    is2FAVerified: boolean;
+    needsVerification: boolean;
+    secret2FAHasValue: boolean;
+    tempSecret2FAHasValue: boolean;
+  }
 ): NextResponse | null {
-  const { is2FAEnabled, hasSetup2FA, is2FAVerified, needsVerification, secret2FAHasValue, tempSecret2FAHasValue } = flags;
+  const {
+    is2FAEnabled,
+    hasSetup2FA,
+    is2FAVerified,
+    needsVerification,
+    secret2FAHasValue,
+    tempSecret2FAHasValue,
+  } = flags;
 
   // If 2FA is disabled, go directly to homepage
   if (is2FAEnabled === false) {
@@ -247,39 +329,60 @@ function handle2FAVerifyPageRedirect(
   }
 
   // If 2FA is set up and verified, go to homepage
-  if (hasSetup2FA === true && is2FAVerified === true && needsVerification === false) {
-    console.log("[AuthMiddleware] 2FA is set up and verified, redirecting to homepage");
+  if (
+    hasSetup2FA === true &&
+    is2FAVerified === true &&
+    needsVerification === false
+  ) {
+    console.log(
+      "[AuthMiddleware] 2FA is set up and verified, redirecting to homepage"
+    );
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   // Check if user has hasSetup2FA = true but no actual secrets (both false)
   if (hasSetup2FA === true && !secret2FAHasValue && !tempSecret2FAHasValue) {
-    console.log("[AuthMiddleware] User has hasSetup2FA=true but no secrets, redirecting to 2FA setup");
+    console.log(
+      "[AuthMiddleware] User has hasSetup2FA=true but no secrets, redirecting to 2FA setup"
+    );
     return NextResponse.redirect(new URL("/auth/2fa-setup", request.url));
   }
-  
+
   // Otherwise, stay on verify page
   return null;
 }
 
 // Middleware for non-auth pages (protected routes)
-async function nonAuthPagesMiddleware(request: NextRequest): Promise<NextResponse | null> {
+async function nonAuthPagesMiddleware(
+  request: NextRequest
+): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl;
 
   // Get user authentication and 2FA status for protected routes
-  const { isAuthenticated, hasSetup2FA, is2FAVerified, is2FAEnabled, secret2FAHasValue, tempSecret2FAHasValue } =
-    await getUserFlags(request);
+  const {
+    isAuthenticated,
+    hasSetup2FA,
+    is2FAVerified,
+    is2FAEnabled,
+    secret2FAHasValue,
+    tempSecret2FAHasValue,
+  } = await getUserFlags(request);
 
   // Branch 1: Unauthenticated users accessing protected routes
   if (!isAuthenticated) {
     console.log(
-      `[NonAuthMiddleware] Redirecting unauthenticated user to login from: ${pathname}`
+      `[NonAuthMiddleware] Redirecting unauthenticated user to /auth/login from: ${pathname}`
     );
     return NextResponse.redirect(new URL(loginPath, request.url));
   }
 
   // Branch 1.5: Authenticated users with incomplete 2FA setup (no secrets)
-  if (is2FAEnabled && hasSetup2FA && !secret2FAHasValue && !tempSecret2FAHasValue) {
+  if (
+    is2FAEnabled &&
+    hasSetup2FA &&
+    !secret2FAHasValue &&
+    !tempSecret2FAHasValue
+  ) {
     console.log(
       `[NonAuthMiddleware] User has incomplete 2FA setup (no secrets), cleaning cookies and redirecting to login from: ${pathname}`
     );
@@ -323,7 +426,7 @@ function isQuickExit(pathname: string): boolean {
 }
 
 function isAuthPath(pathname: string): boolean {
-  return AUTH_PAGES.some(authPath => pathname.startsWith(authPath));
+  return AUTH_PAGES.some((authPath) => pathname.startsWith(authPath));
 }
 
 async function getUserFlags(request: NextRequest) {
@@ -354,7 +457,7 @@ async function getUserFlags(request: NextRequest) {
     }
 
     // Check if token is a JWT token (starts with eyJ)
-    if (authToken.startsWith('eyJ')) {
+    if (authToken.startsWith("eyJ")) {
       // Use JWT token for authentication
       const userFlags = JWTUtils.getUserFlagsFromToken(authToken);
       console.log(`[Middleware] JWT - User flags:`, userFlags);
@@ -362,7 +465,9 @@ async function getUserFlags(request: NextRequest) {
     } else {
       // Legacy token handling - fallback to database check for backward compatibility
       console.log(`[Middleware] Legacy token detected, using database check`);
-      const { check2FAStatusAction } = await import("@/backend_lib/actions/2fa");
+      const { check2FAStatusAction } = await import(
+        "@/backend_lib/actions/2fa"
+      );
       const result = await check2FAStatusAction();
 
       if (!result.success) {
@@ -384,7 +489,7 @@ async function getUserFlags(request: NextRequest) {
         secret2FAHasValue: result.secret2FAHasValue || false,
         tempSecret2FAHasValue: result.tempSecret2FAHasValue || false,
       };
-      
+
       console.log(`[Middleware] Legacy - User flags:`, userFlags);
       return userFlags;
     }

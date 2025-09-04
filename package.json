@@ -1,5 +1,5 @@
 {
-  "name": "qr-code-admin-mssql",
+  "name": "sql-server-connection-manager",
   "version": "1.0.0",
   "description": "A modern Next.js admin panel designed to solve multiple connection string flexibility with MS SQL Server using mssql in Node.js. Features comprehensive database management, secure 2FA authentication, and interactive script management.",
   "keywords": [
@@ -26,12 +26,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hamdyyemad/qr-code-admin-mssql.git"
+    "url": "https://github.com/hamdyyemad/sql-server-connection-manager.git"
   },
   "bugs": {
-    "url": "https://github.com/hamdyyemad/qr-code-admin-mssql/issues"
+    "url": "https://github.com/hamdyyemad/sql-server-connection-manager/issues"
   },
-  "homepage": "https://github.com/hamdyyemad/qr-code-admin-mssql#readme",
+  "homepage": "https://github.com/hamdyyemad/sql-server-connection-manager#readme",
   "main": "index.js",
   "engines": {
     "node": ">=16.0.0",
@@ -69,7 +69,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.539.0",
     "mssql": "^11.0.1",
-    "next": "15.4.2",
+    "next": "^15.5.2",
     "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -101,7 +101,7 @@
     "mssql": "^11.0.1"
   },
   "optionalDependencies": {
-    "@libsql/client": "^0.5.6"
+    "@libsql/client": "^0.15.14"
   },
   "config": {
     "unsafe-perm": false
