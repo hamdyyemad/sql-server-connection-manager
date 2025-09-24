@@ -22,38 +22,27 @@ const adminConfig = {
   password: process.env.ADMIN_PASSWORD || "admin123",
 };
 
-// Parse SQL statements properly
+// Parse SQL statements using a much simpler approach
 function parseSQLStatements(sqlContent) {
+  // Remove comments first
+  let cleanContent = sqlContent
+    .replace(/--.*$/gm, "") // Remove single-line comments
+    .replace(/\/\*[\s\S]*?\*\//g, ""); // Remove multi-line comments
+
+  // Split by semicolons, but be smart about it
   const statements = [];
   let currentStatement = "";
   let inString = false;
   let stringChar = "";
-  let commentLevel = 0; // 0 = no comment, 1 = -- comment, 2 = /* comment */
-  let braceLevel = 0; // Track BEGIN/END blocks
+  let braceLevel = 0;
+  let caseLevel = 0;
 
-  for (let i = 0; i < sqlContent.length; i++) {
-    const char = sqlContent[i];
-    const nextChar = sqlContent[i + 1] || "";
-
-    // Handle comments
-    if (commentLevel === 0 && char === "-" && nextChar === "-") {
-      commentLevel = 1;
-      i++; // Skip next char
-      continue;
-    } else if (commentLevel === 0 && char === "/" && nextChar === "*") {
-      commentLevel = 2;
-      i++; // Skip next char
-      continue;
-    } else if (commentLevel === 1 && char === "\n") {
-      commentLevel = 0;
-      continue;
-    } else if (commentLevel === 2 && char === "*" && nextChar === "/") {
-      commentLevel = 0;
-      i++; // Skip next char
-      continue;
-    }
-
-    if (commentLevel > 0) continue;
+  for (let i = 0; i < cleanContent.length; i++) {
+    const char = cleanContent[i];
+    const nextChar = cleanContent[i + 1] || "";
+    const nextThreeChars = cleanContent.substring(i, i + 4);
+    const nextFourChars = cleanContent.substring(i, i + 5);
+    const isLastChar = i === cleanContent.length - 1;
 
     // Handle string literals
     if (!inString && (char === "'" || char === '"')) {
@@ -63,30 +52,53 @@ function parseSQLStatements(sqlContent) {
       inString = false;
     }
 
-    // Track BEGIN/END blocks for triggers
-    if (!inString && commentLevel === 0) {
+    // Track BEGIN/END blocks
+    if (!inString) {
       if (
-        char === "B" &&
-        nextChar === "E" &&
-        sqlContent[i + 2] === "G" &&
-        sqlContent[i + 3] === "I" &&
-        sqlContent[i + 4] === "N"
+        nextFourChars.toUpperCase() === "BEGIN" &&
+        (i === 0 || !/\w/.test(cleanContent[i - 1])) &&
+        (i + 4 >= cleanContent.length || !/\w/.test(cleanContent[i + 4]))
       ) {
         braceLevel++;
+        i += 4;
+        currentStatement += "BEGIN";
+        continue;
       } else if (
-        char === "E" &&
-        nextChar === "N" &&
-        sqlContent[i + 2] === "D"
+        nextThreeChars.toUpperCase() === "CASE" &&
+        (i === 0 || !/\w/.test(cleanContent[i - 1])) &&
+        (i + 3 >= cleanContent.length || !/\w/.test(cleanContent[i + 3]))
       ) {
-        braceLevel--;
+        caseLevel++;
+        i += 3;
+        currentStatement += "CASE";
+        continue;
+      } else if (
+        nextThreeChars.toUpperCase() === "END" &&
+        (i === 0 || !/\w/.test(cleanContent[i - 1])) &&
+        (i + 3 >= cleanContent.length || !/\w/.test(cleanContent[i + 3]))
+      ) {
+        if (caseLevel > 0) {
+          caseLevel--;
+          i += 2;
+          currentStatement += "END";
+          continue;
+        } else if (braceLevel > 0) {
+          braceLevel--;
+          i += 2;
+          currentStatement += "END";
+          continue;
+        }
       }
     }
 
-    // Add character to current statement
     currentStatement += char;
 
     // Check for statement end (semicolon outside of string and outside BEGIN/END blocks)
-    if (char === ";" && !inString && braceLevel === 0) {
+    // Also handle end of file
+    if (
+      (char === ";" && !inString && braceLevel === 0 && caseLevel === 0) ||
+      (isLastChar && currentStatement.trim().length > 0)
+    ) {
       const trimmed = currentStatement.trim();
       if (trimmed.length > 0) {
         statements.push(trimmed);
@@ -133,14 +145,145 @@ async function createDatabaseConnection() {
   return db;
 }
 
-// Execute database schema
+// Execute database schema using a much simpler approach
 async function executeDatabaseSchema(db) {
   console.log("📋 Executing database schema...");
   const schemaPath = path.join(__dirname, "..", "..", "database", "schema.sql");
   const schema = fs.readFileSync(schemaPath, "utf8");
 
-  // Parse SQL statements properly
-  const statements = parseSQLStatements(schema);
+  // Clean up the schema content
+  let cleanSchema = schema
+    .replace(/--.*$/gm, "") // Remove single-line comments
+    .replace(/\/\*[\s\S]*?\*\//g, "") // Remove multi-line comments
+    .replace(/\r\n/g, "\n") // Normalize line endings
+    .replace(/\r/g, "\n"); // Normalize line endings
+
+  // Use a different approach - execute statements in batches
+  // First, try to execute the entire schema as one statement
+  try {
+    await db.execute(cleanSchema);
+    console.log(`✅ Schema executed successfully as a single statement`);
+    console.log("✅ Schema execution completed\n");
+    return;
+  } catch (error) {
+    console.log(`⚠️  Single statement execution failed: ${error.message}`);
+    console.log("🔄 Falling back to individual statement execution...");
+  }
+
+  // Fallback: Execute statements manually in a controlled way
+  const statements = [
+    // Tables
+    `CREATE TABLE users (
+      id TEXT PRIMARY KEY NOT NULL,
+      username TEXT NOT NULL UNIQUE,
+      passwordHash TEXT NOT NULL,
+      passwordSalt TEXT NOT NULL,
+      hasSetup2FA INTEGER NOT NULL DEFAULT 0,
+      is2FAVerified INTEGER NOT NULL DEFAULT 0,
+      is2FAEnabled INTEGER NOT NULL DEFAULT 1,
+      secret2FA TEXT NULL,
+      tempSecret2FA TEXT NULL,
+      isActive INTEGER NOT NULL DEFAULT 1,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      updatedAt TEXT DEFAULT (datetime('now')),
+      lastLoginAt TEXT NULL
+    )`,
+
+    `CREATE TABLE auth_sessions (
+      id TEXT PRIMARY KEY NOT NULL,
+      userId TEXT NOT NULL,
+      sessionToken TEXT NOT NULL UNIQUE,
+      step TEXT NOT NULL,
+      isCompleted INTEGER NOT NULL DEFAULT 0,
+      expiresAt TEXT NOT NULL,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      updatedAt TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )`,
+
+    `CREATE TABLE login_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      ipAddress TEXT,
+      userAgent TEXT,
+      success INTEGER NOT NULL DEFAULT 0,
+      attemptedAt TEXT NOT NULL DEFAULT (datetime('now')),
+      step TEXT NOT NULL
+    )`,
+
+    `CREATE TABLE audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId TEXT,
+      action TEXT NOT NULL,
+      details TEXT,
+      ipAddress TEXT,
+      userAgent TEXT,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+    )`,
+
+    // Indexes
+    `CREATE INDEX idx_users_username ON users(username) WHERE isActive = 1`,
+    `CREATE INDEX idx_users_active ON users(isActive)`,
+    `CREATE INDEX idx_users_last_login ON users(lastLoginAt)`,
+    `CREATE INDEX idx_users_2fa_verified ON users(is2FAVerified)`,
+    `CREATE INDEX idx_users_2fa_enabled ON users(is2FAEnabled)`,
+    `CREATE INDEX idx_sessions_token ON auth_sessions(sessionToken)`,
+    `CREATE INDEX idx_sessions_user ON auth_sessions(userId)`,
+    `CREATE INDEX idx_sessions_expires ON auth_sessions(expiresAt)`,
+    `CREATE INDEX idx_login_attempts_username ON login_attempts(username, attemptedAt)`,
+    `CREATE INDEX idx_login_attempts_ip ON login_attempts(ipAddress, attemptedAt)`,
+    `CREATE INDEX idx_audit_logs_user ON audit_logs(userId, createdAt)`,
+    `CREATE INDEX idx_audit_logs_action ON audit_logs(action, createdAt)`,
+
+    // Triggers
+    `CREATE TRIGGER update_users_updated_at 
+     AFTER UPDATE ON users
+     BEGIN
+         UPDATE users SET updatedAt = datetime('now') WHERE id = NEW.id;
+     END`,
+
+    `CREATE TRIGGER update_sessions_updated_at 
+     AFTER UPDATE ON auth_sessions
+     BEGIN
+         UPDATE auth_sessions SET updatedAt = datetime('now') WHERE id = NEW.id;
+     END`,
+
+    // Views
+    `CREATE VIEW active_users AS
+     SELECT 
+         id,
+         username,
+         hasSetup2FA,
+         is2FAVerified,
+         is2FAEnabled,
+         secret2FA IS NOT NULL as hasSecret,
+         createdAt,
+         lastLoginAt
+     FROM users 
+     WHERE isActive = 1`,
+
+    `CREATE VIEW recent_login_attempts AS
+     SELECT 
+         username,
+         COUNT(*) as attempt_count,
+         MAX(attemptedAt) as last_attempt,
+         SUM(success) as successful_attempts
+     FROM login_attempts 
+     WHERE attemptedAt > datetime('now', '-1 hour')
+     GROUP BY username`,
+
+    // Security trigger
+    `CREATE TRIGGER validate_username_not_empty
+     BEFORE INSERT ON users
+     BEGIN
+         SELECT CASE
+             WHEN NEW.username IS NULL OR trim(NEW.username) = '' THEN
+                 RAISE(ABORT, 'Username cannot be empty')
+         END;
+     END`,
+  ];
+
   console.log(`📝 Found ${statements.length} SQL statements to execute\n`);
 
   // Execute statements in order

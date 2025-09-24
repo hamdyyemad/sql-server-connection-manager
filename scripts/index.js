@@ -22,7 +22,6 @@ const categories = {
   database: {
     description: "Database setup, initialization, and connection scripts",
     scripts: {
-      "init-database": "Initialize the main database schema and admin user",
       "setup-dashboard-database": "Setup dashboard database with sample data",
       "test-dashboard-connection": "Test connection to dashboard database",
       "setup-turso-db": "Setup Turso database",
@@ -207,7 +206,7 @@ async function handleMainMenu() {
 async function handleScriptsMenu(category) {
   showScriptsMenu(category);
 
-  const answer = await askQuestion("Select a script (0-6): ");
+  const answer = await askQuestion("Select a script (0-5): ");
   const choice = parseInt(answer);
 
   if (choice === 0) {

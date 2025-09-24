@@ -120,3 +120,4 @@ BEGIN
             RAISE(ABORT, 'Username cannot be empty')
     END;
 END;
+ 
